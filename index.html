@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+    <title>wasm test</title>
+    <meta charset="utf-8"> <!-- could do from header but idc -->
+    <script>
+		const out = WebAssembly.instantiateStreaming(fetch("/main.wasm"))
+		console.log(out)
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -1,7 +1,36 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+	"os"
+)
 
 func main() {
-	fmt.Println("Hello from the server!")
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		file, err := os.ReadFile("../index.html")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Internal Server Error"))
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(file)
+	})
+
+	http.HandleFunc("/main.wasm", func(w http.ResponseWriter, r *http.Request) {
+		file, err := os.ReadFile("../client/main.wasm")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Internal Server Error"))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/wasm")
+		w.Write(file)
+	})
+
+	fmt.Println("Server is running on http://localhost:8080")
+	http.ListenAndServe(":8080", nil)
 }
