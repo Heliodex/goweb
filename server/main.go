@@ -47,7 +47,7 @@ func main() {
 	})
 
 	// api
-	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("POST /api", func(w http.ResponseWriter, r *http.Request) {
 		thing := shared.Thing{
 			A: "Hello from the server!",
 			B: 42,
