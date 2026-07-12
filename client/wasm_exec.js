@@ -332,7 +332,7 @@ globalThis.Go = class {
 				// func walltime() (sec int64, nsec int32)
 				"runtime.walltime": sp => {
 					sp >>>= 0
-					const msec = new Date().getTime()
+					const msec = Date.now()
 					setInt64(sp + 8, msec / 1000)
 					this.mem.setInt32(sp + 16, (msec % 1000) * 1000000, true)
 				},
@@ -609,7 +609,7 @@ globalThis.Go = class {
 
 		const strPtr = str => {
 			const ptr = offset
-			const bytes = encoder.encode(str + "\0")
+			const bytes = encoder.encode(`${str}\0`)
 			new Uint8Array(this.mem.buffer, offset, bytes.length).set(bytes)
 			offset += bytes.length
 			if (offset % 8 !== 0) offset += 8 - (offset % 8)
