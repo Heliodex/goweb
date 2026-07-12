@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/Heliodex/goweb/shared"
 )
 
 func main() {
@@ -19,6 +21,7 @@ func main() {
 		w.Write(file)
 	})
 
+	// files
 	http.HandleFunc("/main.wasm", func(w http.ResponseWriter, r *http.Request) {
 		file, err := os.ReadFile("../client/main.wasm")
 		if err != nil {
@@ -41,6 +44,23 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Write(file)
+	})
+
+	// api
+	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+		thing := shared.Thing{
+			A: "Hello from the server!",
+			B: 42,
+		}
+
+		if thing.Serialise(w) != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Internal Server Error"))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(http.StatusOK)
 	})
 
 	fmt.Println("Server is running on http://localhost:8080")
