@@ -10,6 +10,12 @@
         const { instance } = await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
         go.run(instance)
     </script>
+
+    <style>
+    	body {
+     		background: black
+	    }
+    </style>
 </head>
 
 <body>
