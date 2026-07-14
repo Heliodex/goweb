@@ -1,6 +1,12 @@
+//go:build js && wasm
+
 package main
 
-import "github.com/Heliodex/goweb/shared"
+import (
+	"syscall/js"
+
+	"github.com/Heliodex/goweb/shared"
+)
 
 func main() {
 	println("Hello from the client!")
@@ -11,4 +17,10 @@ func main() {
 	}
 
 	println("Response from server:", res.A, res.B)
+
+	doc := js.Global().Get("document")
+	h1 := doc.Call("createElement", "h1")
+	h1.Set("textContent", "Hello from Go WASM!")
+	h1.Set("style", "color: white")
+	doc.Get("body").Call("appendChild", h1)
 }
