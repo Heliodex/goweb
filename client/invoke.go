@@ -12,6 +12,10 @@ import (
 const url = "http://localhost:8080"
 
 func Invoke[ReqType shared.Data, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType], arg ReqType) (res ResType, err error) {
+	if err = arg.Validate(); err != nil {
+		return res, fmt.Errorf("invalid argument: %w", err)
+	}
+
 	var w bytes.Buffer
 	if err = gob.NewEncoder(&w).Encode(arg); err != nil {
 		return res, fmt.Errorf("failed to encode request: %w", err)
@@ -29,6 +33,10 @@ func Invoke[ReqType shared.Data, ResType shared.Data](f shared.RemoteFunc[ReqTyp
 
 	if err = gob.NewDecoder(hres.Body).Decode(&res); err != nil {
 		return res, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if err = res.Validate(); err != nil {
+		return res, fmt.Errorf("invalid response: %w", err)
 	}
 
 	return
