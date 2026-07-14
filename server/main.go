@@ -46,22 +46,7 @@ func main() {
 		w.Write(file)
 	})
 
-	// api
-	http.HandleFunc("POST /api", func(w http.ResponseWriter, r *http.Request) {
-		thing := shared.Thing{
-			A: "Hello from the server!",
-			B: 42,
-		}
-
-		if thing.Serialise(w) != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Internal Server Error"))
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/octet-stream")
-		w.WriteHeader(http.StatusOK)
-	})
+	HandleRemoteFunc(shared.ThingFunc)
 
 	fmt.Println("Server is running on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)

@@ -1,27 +1,14 @@
 package main
 
-import (
-	"fmt"
-	"io"
-	"net/http"
-)
+import "github.com/Heliodex/goweb/shared"
 
 func main() {
 	println("Hello from the client!")
 
-	res, err := http.Post("/api", "application/octet-stream", nil)
+	res, err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: 42})
 	if err != nil {
 		panic(err)
 	}
 
-	println("Response status:", res.Status)
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Response body: ", body)
-
-	defer res.Body.Close()
+	println("Response from server:", res.A, res.B)
 }
