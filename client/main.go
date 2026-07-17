@@ -23,4 +23,12 @@ func main() {
 	h1.Set("textContent", "Hello from Go WASM!")
 	h1.Set("style", "color: white")
 	doc.Get("body").Call("appendChild", h1)
+
+	dom := Dom{
+		Body: []Element{
+			el("h1", nil, []Element{
+				text("Hello from Go WASM!"),
+			}),
+		},
+	}
 }
