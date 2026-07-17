@@ -45,6 +45,44 @@ type Dom struct {
 	Head, Body []Element
 }
 
+func renderStaticElement(se StaticElement) js.Value {
+	doc := js.Global().Get("document")
+	el := doc.Call("createElement", se.Name)
+	for k, v := range se.Attrs {
+		el.Set(k, v)
+	}
+	for _, child := range se.Children {
+		el.Call("appendChild", renderElement(child))
+	}
+	return el
+}
+
+func renderTextNode(tn TextNode) js.Value {
+	doc := js.Global().Get("document")
+	return doc.Call("createTextNode", tn.Text)
+}
+
+func renderElement(e Element) js.Value {
+	switch v := e.(type) {
+	case StaticElement:
+		return renderStaticElement(v)
+	case TextNode:
+		return renderTextNode(v)
+	case DynamicElement:
+		return renderStaticElement(v.Value)
+	}
+
+	panic("unknown element type")
+}
+
 func (d Dom) Render() {
 	doc := js.Global().Get("document")
+	for _, elem := range d.Head {
+		node := renderElement(elem)
+		doc.Get("head").Call("appendChild", node)
+	}
+	for _, elem := range d.Body {
+		node := renderElement(elem)
+		doc.Get("body").Call("appendChild", node)
+	}
 }
