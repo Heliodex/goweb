@@ -33,11 +33,12 @@ type TextNode struct {
 func (TextNode) Element()       {}
 func (TextNode) StaticElement() {}
 
-func el(name string, attrs Attrs, children []Element) Element {
+func el(name string, attrs Attrs, children []Element) TagElement {
 	return TagElement{name, attrs, children}
 }
 
 type DynamicElement struct {
+	ID    string
 	Value StaticElement
 }
 
@@ -81,12 +82,25 @@ func renderStaticElement(se StaticElement) js.Value {
 	panic("unknown static element type")
 }
 
+func renderDynamicElement(de DynamicElement) js.Value {
+	node := renderStaticElement(de.Value)
+	node.Call("setAttribute", "data-dynamic-id", de.ID)
+
+	doc := js.Global().Get("document")
+	// if an element with the same ID already exists, replace it
+	if existing := doc.Call("querySelector", "[data-dynamic-id='"+de.ID+"']"); existing.Truthy() {
+		existing.Call("replaceWith", node)
+	}
+
+	return node
+}
+
 func renderElement(e Element) js.Value {
 	switch v := e.(type) {
 	case StaticElement:
 		return renderStaticElement(v)
 	case DynamicElement:
-		return renderStaticElement(v.Value)
+		return renderDynamicElement(v)
 	}
 
 	panic("unknown element type")
@@ -113,16 +127,16 @@ func MakeFunc(fn func()) js.Func {
 	})
 }
 
-type GenericValue[T any] interface {
-	Set(T)
-}
-
 type Value[T any] struct {
-	Value T
+	Value        T
+	dependencies map[*Point]struct{}
 }
 
 func Val[T any](v T) *Value[T] {
-	return &Value[T]{Value: v}
+	return &Value[T]{
+		Value:        v,
+		dependencies: make(map[*Point]struct{}),
+	}
 }
 
 func (v *Value[T]) Set(newValue T) {
@@ -133,19 +147,15 @@ func Peek[T any](v *Value[T]) T {
 	return v.Value
 }
 
-type Point struct {
-	dependencies map[any]struct{} // *Value
-}
+type Point struct{}
 
 func Use[T any](p *Point, v *Value[T]) T {
-	p.dependencies[v] = struct{}{}
+	v.dependencies[p] = struct{}{}
 	return v.Value
 }
 
-func Dynamic(f func(p *Point) StaticElement) DynamicElement {
-	p := &Point{
-		dependencies: make(map[any]struct{}),
-	}
+func Dynamic(f func(p *Point) TagElement) DynamicElement {
+	p := &Point{}
 
 	return DynamicElement{
 		Value: f(p),

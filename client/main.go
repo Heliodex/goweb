@@ -34,13 +34,14 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
-			el("p", Attrs{
-				"style": "color: white",
-			}, []Element{
-				Dynamic(func(p *Point) StaticElement {
-					n := Use(p, num)
-					return text("You have clicked the button " + strconv.Itoa(n) + " times.")
-				}),
+			Dynamic(func(p *Point) TagElement {
+				n := Use(p, num)
+
+				return el("p", Attrs{
+					"style": "color: white",
+				}, []Element{
+					text("You have clicked the button " + strconv.Itoa(n) + " times."),
+				})
 			}),
 
 			el("button", Attrs{
