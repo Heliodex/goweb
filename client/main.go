@@ -2,7 +2,11 @@
 
 package main
 
-import "github.com/Heliodex/goweb/shared"
+import (
+	"strconv"
+
+	"github.com/Heliodex/goweb/shared"
+)
 
 func main() {
 	println("Hello from the client!")
@@ -20,6 +24,8 @@ func main() {
 	// h1.Set("style", "color: white")
 	// doc.Get("body").Call("appendChild", h1)
 
+	num := Val(0)
+
 	dom := Dom{
 		Body: []Element{
 			el("h1", Attrs{
@@ -28,9 +34,19 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
+			el("p", Attrs{
+				"style": "color: white",
+			}, []Element{
+				Dynamic(func(p Point) StaticElement {
+					n := Use(p, num)
+					return text("You have clicked the button " + strconv.Itoa(n) + " times.")
+				}),
+			}),
+
 			el("button", Attrs{
 				"onclick": MakeFunc(func() {
 					println("Button clicked!")
+					num.Set(Peek(num) + 1)
 				}),
 			}, []Element{
 				text("Click me"),

@@ -2,7 +2,9 @@
 
 package main
 
-import "syscall/js"
+import (
+	"syscall/js"
+)
 
 type Attrs map[string]any
 
@@ -10,34 +12,40 @@ type Element interface {
 	Element()
 }
 
-type StaticElement struct {
+type StaticElement interface {
+	Element
+	StaticElement()
+}
+
+type TagElement struct {
 	Name     string
 	Attrs    Attrs
 	Children []Element
 }
 
-func (StaticElement) Element() {}
+func (TagElement) Element()       {}
+func (TagElement) StaticElement() {}
+
+type TextNode struct {
+	Text string
+}
+
+func (TextNode) Element()       {}
+func (TextNode) StaticElement() {}
 
 func el(name string, attrs Attrs, children []Element) Element {
-	return StaticElement{name, attrs, children}
+	return TagElement{name, attrs, children}
 }
 
 type DynamicElement struct {
-	Value  StaticElement
-	Update chan struct{}
+	Value StaticElement
 }
 
 func (DynamicElement) Element() {}
 
 // todo: dynamicelement constructor
 
-type TextNode struct {
-	Text string
-}
-
-func (TextNode) Element() {}
-
-func text(text string) Element {
+func text(text string) StaticElement {
 	return TextNode{text}
 }
 
@@ -45,7 +53,7 @@ type Dom struct {
 	Head, Body []Element
 }
 
-func renderStaticElement(se StaticElement) js.Value {
+func renderTagElement(se TagElement) js.Value {
 	doc := js.Global().Get("document")
 	el := doc.Call("createElement", se.Name)
 	for k, v := range se.Attrs {
@@ -62,12 +70,21 @@ func renderTextNode(tn TextNode) js.Value {
 	return doc.Call("createTextNode", tn.Text)
 }
 
+func renderStaticElement(se StaticElement) js.Value {
+	switch v := se.(type) {
+	case TagElement:
+		return renderTagElement(v)
+	case TextNode:
+		return renderTextNode(v)
+	}
+
+	panic("unknown static element type")
+}
+
 func renderElement(e Element) js.Value {
 	switch v := e.(type) {
 	case StaticElement:
 		return renderStaticElement(v)
-	case TextNode:
-		return renderTextNode(v)
 	case DynamicElement:
 		return renderStaticElement(v.Value)
 	}
@@ -94,4 +111,35 @@ func MakeFunc(fn func()) js.Func {
 		fn()
 		return nil
 	})
+}
+
+type Value[T any] struct {
+	Value T
+}
+
+func Val[T any](v T) Value[T] {
+	return Value[T]{Value: v}
+}
+
+func (v *Value[T]) Set(newValue T) {
+	v.Value = newValue
+}
+
+func Peek[T any](v Value[T]) T {
+	return v.Value
+}
+
+type Point struct{}
+
+func Use[T any](p Point, v Value[T]) T {
+	// notify p
+	return v.Value
+}
+
+func Dynamic(f func(p Point) StaticElement) DynamicElement {
+	p := Point{}
+
+	return DynamicElement{
+		Value: f(p),
+	}
 }
