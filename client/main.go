@@ -37,7 +37,7 @@ func main() {
 			el("p", Attrs{
 				"style": "color: white",
 			}, []Element{
-				Dynamic(func(p Point) StaticElement {
+				Dynamic(func(p *Point) StaticElement {
 					n := Use(p, num)
 					return text("You have clicked the button " + strconv.Itoa(n) + " times.")
 				}),

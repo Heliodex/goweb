@@ -113,31 +113,39 @@ func MakeFunc(fn func()) js.Func {
 	})
 }
 
+type GenericValue[T any] interface {
+	Set(T)
+}
+
 type Value[T any] struct {
 	Value T
 }
 
-func Val[T any](v T) Value[T] {
-	return Value[T]{Value: v}
+func Val[T any](v T) *Value[T] {
+	return &Value[T]{Value: v}
 }
 
 func (v *Value[T]) Set(newValue T) {
 	v.Value = newValue
 }
 
-func Peek[T any](v Value[T]) T {
+func Peek[T any](v *Value[T]) T {
 	return v.Value
 }
 
-type Point struct{}
+type Point struct {
+	dependencies map[any]struct{} // *Value
+}
 
-func Use[T any](p Point, v Value[T]) T {
-	// notify p
+func Use[T any](p *Point, v *Value[T]) T {
+	p.dependencies[v] = struct{}{}
 	return v.Value
 }
 
-func Dynamic(f func(p Point) StaticElement) DynamicElement {
-	p := Point{}
+func Dynamic(f func(p *Point) StaticElement) DynamicElement {
+	p := &Point{
+		dependencies: make(map[any]struct{}),
+	}
 
 	return DynamicElement{
 		Value: f(p),
