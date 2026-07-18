@@ -27,6 +27,14 @@ func main() {
 			}, []Element{
 				text("Hello from Go WASM!"),
 			}),
+
+			el("button", Attrs{
+				"onclick": MakeFunc(func() {
+					println("Button clicked!")
+				}),
+			}, []Element{
+				text("Click me"),
+			}),
 		},
 	}
 

@@ -4,7 +4,7 @@ package main
 
 import "syscall/js"
 
-type Attrs map[string]string
+type Attrs map[string]any
 
 type Element interface {
 	Element()
@@ -85,4 +85,13 @@ func (d Dom) Render() {
 		node := renderElement(elem)
 		doc.Get("body").Call("appendChild", node)
 	}
+
+	select {} // keep program open for event handlers
+}
+
+func MakeFunc(fn func()) js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		fn()
+		return nil
+	})
 }
