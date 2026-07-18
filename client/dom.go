@@ -49,9 +49,22 @@ func el(name string, attrs Attrs, children []Element) TagElement {
 	return TagElement{name, attrs, children}
 }
 
+type Dynamic[T any] interface {
+	ID() string
+	Function() T
+}
+
 type DynamicElement struct {
-	ID       string
-	Function func() TagElement
+	id       string
+	function func() TagElement
+}
+
+func (de DynamicElement) ID() string {
+	return de.id
+}
+
+func (de DynamicElement) Function() TagElement {
+	return de.function()
 }
 
 func (DynamicElement) Element() {}
@@ -95,12 +108,12 @@ func renderStaticElement(se StaticElement) js.Value {
 }
 
 func renderDynamicElement(de DynamicElement) js.Value {
-	node := renderStaticElement(de.Function())
-	node.Call("setAttribute", "data-dynamic-id", de.ID)
+	node := renderStaticElement(de.function())
+	node.Call("setAttribute", "data-dynamic-id", de.id)
 
 	doc := js.Global().Get("document")
 	// if an element with the same ID already exists, replace it
-	if existing := doc.Call("querySelector", "[data-dynamic-id='"+de.ID+"']"); existing.Truthy() {
+	if existing := doc.Call("querySelector", "[data-dynamic-id='"+de.id+"']"); existing.Truthy() {
 		existing.Call("replaceWith", node)
 	}
 
@@ -140,14 +153,15 @@ func MakeFunc(fn func()) js.Func {
 }
 
 type Value[T any] struct {
+	ID           string
 	Value        T
-	dependencies map[*Point]struct{}
+	dependencies map[*Point[T]]struct{}
 }
 
 func Val[T any](v T) *Value[T] {
 	return &Value[T]{
 		Value:        v,
-		dependencies: make(map[*Point]struct{}),
+		dependencies: make(map[*Point[T]]struct{}),
 	}
 }
 
@@ -164,22 +178,22 @@ func Peek[T any](v *Value[T]) T {
 	return v.Value
 }
 
-type Point struct {
-	de *DynamicElement
+type Point[T any] struct {
+	de *Dynamic[T]
 }
 
-func Use[T any](p *Point, v *Value[T]) T {
+func Use[T any](p *Point[T], v *Value[T]) T {
 	v.dependencies[p] = struct{}{}
 	return v.Value
 }
 
-func Dynamic(f func(p *Point) TagElement) DynamicElement {
-	p := &Point{}
+func Dyn[T any](f func(p *Point[T]) T) Dynamic[T] {
+	p := &Point[T]{}
 
-	de := DynamicElement{
+	de := Dynamic[T]{
 		ID: randomStringID(),
 		// Value: f(p),
-		Function: func() TagElement {
+		Function: func() T {
 			return f(p)
 		},
 	}

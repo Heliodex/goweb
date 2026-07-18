@@ -34,7 +34,7 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
-			Dynamic(func(p *Point) TagElement {
+			Dyn(func(p *Point[TagElement]) TagElement {
 				println("Dynamic function called! num is", Peek(num))
 				n := Use(p, num)
 
