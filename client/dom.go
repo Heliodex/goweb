@@ -3,8 +3,20 @@
 package main
 
 import (
+	"math/rand"
 	"syscall/js"
 )
+
+const idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func randomStringID() string {
+	id := make([]byte, 8)
+	for i := range 8 {
+		id[i] = idChars[rand.Intn(len(idChars))]
+	}
+
+	return string(id)
+}
 
 type Attrs map[string]any
 
@@ -38,8 +50,8 @@ func el(name string, attrs Attrs, children []Element) TagElement {
 }
 
 type DynamicElement struct {
-	ID    string
-	Value StaticElement
+	ID       string
+	Function func() TagElement
 }
 
 func (DynamicElement) Element() {}
@@ -83,7 +95,7 @@ func renderStaticElement(se StaticElement) js.Value {
 }
 
 func renderDynamicElement(de DynamicElement) js.Value {
-	node := renderStaticElement(de.Value)
+	node := renderStaticElement(de.Function())
 	node.Call("setAttribute", "data-dynamic-id", de.ID)
 
 	doc := js.Global().Get("document")
@@ -141,13 +153,20 @@ func Val[T any](v T) *Value[T] {
 
 func (v *Value[T]) Set(newValue T) {
 	v.Value = newValue
+
+	// trigger update
+	for p := range v.dependencies {
+		renderDynamicElement(*p.de)
+	}
 }
 
 func Peek[T any](v *Value[T]) T {
 	return v.Value
 }
 
-type Point struct{}
+type Point struct {
+	de *DynamicElement
+}
 
 func Use[T any](p *Point, v *Value[T]) T {
 	v.dependencies[p] = struct{}{}
@@ -157,7 +176,14 @@ func Use[T any](p *Point, v *Value[T]) T {
 func Dynamic(f func(p *Point) TagElement) DynamicElement {
 	p := &Point{}
 
-	return DynamicElement{
-		Value: f(p),
+	de := DynamicElement{
+		ID: randomStringID(),
+		// Value: f(p),
+		Function: func() TagElement {
+			return f(p)
+		},
 	}
+	p.de = &de
+
+	return de
 }

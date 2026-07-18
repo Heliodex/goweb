@@ -35,6 +35,7 @@ func main() {
 			}),
 
 			Dynamic(func(p *Point) TagElement {
+				println("Dynamic function called! num is", Peek(num))
 				n := Use(p, num)
 
 				return el("p", Attrs{
@@ -46,8 +47,8 @@ func main() {
 
 			el("button", Attrs{
 				"onclick": MakeFunc(func() {
-					println("Button clicked!")
 					num.Set(Peek(num) + 1)
+					println("Button clicked, num is now", Peek(num))
 				}),
 			}, []Element{
 				text("Click me"),
