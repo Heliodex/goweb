@@ -39,7 +39,7 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
-			NewComputed(func(n notifier) TagElement {
+			NewComputedElement(func(n notifier) TagElement {
 				println("Dynamic function called! num is", num.Peek())
 				unum := num.Use(n)
 
@@ -50,7 +50,7 @@ func main() {
 				})
 			}),
 
-			NewComputed(func(n notifier) TagElement {
+			NewComputedElement(func(n notifier) TagElement {
 				println("Dynamic function called! num is", num.Peek())
 				udouble := double.Use(n)
 

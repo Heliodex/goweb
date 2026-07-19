@@ -102,16 +102,16 @@ func renderElement(se Element) js.Value {
 		return renderTagElement(v)
 	case TextNode:
 		return renderTextNode(v)
-	case *Computed[TagElement]:
+	case *ComputedElement:
 		notify := &CustomNotifier{}
 		notify.notifyFunc = func() {
 			println("Notifying dependents of computed element with ID:", v.ID)
-			renderTagElementComputed(v)
+			renderTagElementComputed(&v.Computed)
 		}
 
 		v.AddDependent(notify)
 
-		return renderTagElementComputed(v)
+		return renderTagElementComputed(&v.Computed)
 	}
 
 	panic("unknown element type")
@@ -219,7 +219,19 @@ func (c *Computed[T]) AddDependency(dep Notifiable) {
 	fmt.Println("Added dependency:", dep)
 }
 
-func (*Computed[T]) Element() {} // MAYBE?
+type ComputedElement struct {
+	Computed[TagElement]
+}
+
+func NewComputedElement(compute Compute[TagElement]) *ComputedElement {
+	c := NewComputed(compute)
+
+	return &ComputedElement{
+		Computed: *c,
+	}
+}
+
+func (ComputedElement) Element() {}
 
 // Values based on Computeds
 type Value[T any] struct {
