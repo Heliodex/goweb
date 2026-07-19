@@ -18,17 +18,12 @@ func main() {
 
 	println("Response from server:", res.A, res.B)
 
-	// doc := js.Global().Get("document")
-	// h1 := doc.Call("createElement", "h1")
-	// h1.Set("textContent", "Hello from Go WASM!")
-	// h1.Set("style", "color: white")
-	// doc.Get("body").Call("appendChild", h1)
-
 	num := NewValue(0)
-	double := NewComputed(func(n notifier) int {
-		udouble := num.Use(n)
-
-		return udouble * 2
+	double := NewComputed(func(n Notifier) int {
+		return num.Use(n) * 2
+	})
+	quadruple := NewComputed(func(n Notifier) int {
+		return double.Use(n) * 2
 	})
 
 	dom := Dom{
@@ -39,7 +34,7 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
-			NewComputedElement(func(n notifier) TagElement {
+			NewComputedElement(func(n Notifier) TagElement {
 				println("Dynamic function called! num is", num.Peek())
 				unum := num.Use(n)
 
@@ -50,14 +45,14 @@ func main() {
 				})
 			}),
 
-			NewComputedElement(func(n notifier) TagElement {
+			NewComputedElement(func(n Notifier) TagElement {
 				println("Dynamic function called! num is", num.Peek())
-				udouble := double.Use(n)
+				uquadruple := quadruple.Use(n)
 
 				return el("p", Attrs{
 					"style": "color: white",
 				}, Elements{
-					text("Double that equals " + strconv.Itoa(udouble) + " times."),
+					text("Quadruple that equals " + strconv.Itoa(uquadruple) + " times."),
 				})
 			}),
 
