@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"syscall/js"
 )
@@ -24,10 +25,12 @@ type Element interface {
 	Element()
 }
 
+type Elements []Element
+
 type TagElement struct {
 	Name     string
 	Attrs    Attrs
-	Children []Element
+	Children Elements
 }
 
 func (TagElement) Element() {}
@@ -38,7 +41,7 @@ type TextNode struct {
 
 func (TextNode) Element() {}
 
-func el(name string, attrs Attrs, children []Element) TagElement {
+func el(name string, attrs Attrs, children Elements) TagElement {
 	return TagElement{name, attrs, children}
 }
 
@@ -49,8 +52,19 @@ func text(text string) Element {
 }
 
 type Dom struct {
-	Head, Body []Element
+	Head, Body Elements
 }
+
+type CustomNotifier struct {
+	notifyFunc func()
+}
+
+func (cn *CustomNotifier) Notify() {
+	cn.notifyFunc()
+}
+
+func (cn *CustomNotifier) AddDependent(Notifiable)  {}
+func (cn *CustomNotifier) AddDependency(Notifiable) {}
 
 func renderTagElement(te TagElement) js.Value {
 	doc := js.Global().Get("document")
@@ -89,6 +103,14 @@ func renderElement(se Element) js.Value {
 	case TextNode:
 		return renderTextNode(v)
 	case *Computed[TagElement]:
+		notify := &CustomNotifier{}
+		notify.notifyFunc = func() {
+			println("Notifying dependents of computed element with ID:", v.ID)
+			renderTagElementComputed(v)
+		}
+
+		v.AddDependent(notify)
+
 		return renderTagElementComputed(v)
 	}
 
@@ -116,34 +138,34 @@ func MakeFunc(fn func()) js.Func {
 	})
 }
 
-type State interface {
-	Dependencies() map[State]struct{}
-	Dependents() map[State]struct{}
-	Compute() any
+type Notifiable interface {
+	Notify()
+	AddDependent(Notifiable)
+	AddDependency(Notifiable)
 }
 
 type Deps struct {
-	dependencies, dependents map[State]struct{}
+	dependencies, dependents map[Notifiable]struct{}
 }
 
 func MakeDeps() Deps {
 	return Deps{
-		dependencies: make(map[State]struct{}),
-		dependents:   make(map[State]struct{}),
+		dependencies: make(map[Notifiable]struct{}),
+		dependents:   make(map[Notifiable]struct{}),
 	}
 }
 
-func (d *Deps) Dependencies() map[State]struct{} {
+func (d *Deps) Dependencies() map[Notifiable]struct{} {
 	return d.dependencies
 }
 
-func (d *Deps) Dependents() map[State]struct{} {
+func (d *Deps) Dependents() map[Notifiable]struct{} {
 	return d.dependents
 }
 
-type notifier func(State)
+type notifier func(Notifiable)
 
-func nilNotifier(State) {}
+func nilNotifier(Notifiable) {}
 
 type Compute[T any] func(notifier) T
 
@@ -156,16 +178,20 @@ type Computed[T any] struct {
 func NewComputed[T any](compute Compute[T]) *Computed[T] {
 	deps := MakeDeps()
 
-	notifier := func(s State) {
-		deps.dependencies[s] = struct{}{}
-	}
-	compute(notifier)
-
-	return &Computed[T]{
+	c := &Computed[T]{
 		ID:      randomStringID(),
 		Deps:    deps,
 		compute: compute,
 	}
+
+	notifier := func(s Notifiable) {
+		c.AddDependency(s)
+		s.AddDependent(c)
+		fmt.Println("notifier called, added dependency:", s)
+	}
+	compute(notifier)
+
+	return c
 }
 
 func (c *Computed[T]) Peek() T {
@@ -176,6 +202,23 @@ func (c *Computed[T]) Use(n notifier) T {
 	return c.compute(n)
 }
 
+func (c *Computed[T]) Notify() {
+	fmt.Println("Computed Notify called, notifying dependents")
+	for dep := range c.dependents {
+		dep.Notify()
+	}
+}
+
+func (c *Computed[T]) AddDependent(dep Notifiable) {
+	c.dependents[dep] = struct{}{}
+	fmt.Println("Added dependent:", dep)
+}
+
+func (c *Computed[T]) AddDependency(dep Notifiable) {
+	c.dependencies[dep] = struct{}{}
+	fmt.Println("Added dependency:", dep)
+}
+
 func (*Computed[T]) Element() {} // MAYBE?
 
 // Values based on Computeds
@@ -184,11 +227,18 @@ type Value[T any] struct {
 }
 
 func NewValue[T any](initial T) *Value[T] {
-	return &Value[T]{
-		Computed: *NewComputed(func(notifier) T {
-			return initial // Initial T
-		}),
+	v := &Value[T]{}
+
+	v.Computed = Computed[T]{
+		ID:   randomStringID(),
+		Deps: MakeDeps(),
+		compute: func(n notifier) T {
+			n(v)
+			return initial
+		},
 	}
+
+	return v
 }
 
 func (v *Value[T]) Set(newValue T) {
@@ -196,5 +246,9 @@ func (v *Value[T]) Set(newValue T) {
 		return newValue
 	}
 
-	// TODO: notify dependents
+	fmt.Println("Value set called, notifying dependents")
+	for dep := range v.dependents {
+		fmt.Println("notifying", dep)
+		dep.Notify()
+	}
 }

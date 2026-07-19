@@ -27,10 +27,10 @@ func main() {
 	num := NewValue(0)
 
 	dom := Dom{
-		Body: []Element{
+		Body: Elements{
 			el("h1", Attrs{
 				"style": "color: white",
-			}, []Element{
+			}, Elements{
 				text("Hello from Go WASM!"),
 			}),
 
@@ -40,7 +40,7 @@ func main() {
 
 				return el("p", Attrs{
 					"style": "color: white",
-				}, []Element{
+				}, Elements{
 					text("You have clicked the button " + strconv.Itoa(unum) + " times."),
 				})
 			}),
@@ -50,7 +50,7 @@ func main() {
 					num.Set(num.Peek() + 1)
 					println("Button clicked, num is now", num.Peek())
 				}),
-			}, []Element{
+			}, Elements{
 				text("Click me"),
 			}),
 		},
