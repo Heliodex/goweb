@@ -25,6 +25,11 @@ func main() {
 	// doc.Get("body").Call("appendChild", h1)
 
 	num := NewValue(0)
+	double := NewComputed(func(n notifier) int {
+		udouble := num.Use(n)
+
+		return udouble * 2
+	})
 
 	dom := Dom{
 		Body: Elements{
@@ -42,6 +47,17 @@ func main() {
 					"style": "color: white",
 				}, Elements{
 					text("You have clicked the button " + strconv.Itoa(unum) + " times."),
+				})
+			}),
+
+			NewComputed(func(n notifier) TagElement {
+				println("Dynamic function called! num is", num.Peek())
+				udouble := double.Use(n)
+
+				return el("p", Attrs{
+					"style": "color: white",
+				}, Elements{
+					text("Double that equals " + strconv.Itoa(udouble) + " times."),
 				})
 			}),
 
