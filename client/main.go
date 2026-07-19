@@ -24,7 +24,7 @@ func main() {
 	// h1.Set("style", "color: white")
 	// doc.Get("body").Call("appendChild", h1)
 
-	num := Val(0)
+	num := NewValue(0)
 
 	dom := Dom{
 		Body: []Element{
@@ -34,21 +34,21 @@ func main() {
 				text("Hello from Go WASM!"),
 			}),
 
-			Dyn(func(p *Point[TagElement]) TagElement {
-				println("Dynamic function called! num is", Peek(num))
-				n := Use(p, num)
+			NewComputed(func(n notifier) TagElement {
+				println("Dynamic function called! num is", num.Peek())
+				unum := num.Use(n)
 
 				return el("p", Attrs{
 					"style": "color: white",
 				}, []Element{
-					text("You have clicked the button " + strconv.Itoa(n) + " times."),
+					text("You have clicked the button " + strconv.Itoa(unum) + " times."),
 				})
 			}),
 
 			el("button", Attrs{
 				"onclick": MakeFunc(func() {
-					num.Set(Peek(num) + 1)
-					println("Button clicked, num is now", Peek(num))
+					num.Set(num.Peek() + 1)
+					println("Button clicked, num is now", num.Peek())
 				}),
 			}, []Element{
 				text("Click me"),
