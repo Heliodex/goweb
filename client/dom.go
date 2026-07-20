@@ -18,34 +18,6 @@ func randomStringID() string {
 	return string(id)
 }
 
-type Attrs map[string]any
-
-type Element interface {
-	Element()
-}
-
-type Elements []Element
-
-type TagElement struct {
-	Name     string
-	Attrs    Attrs
-	Children Elements
-}
-
-func (TagElement) Element() {}
-
-type TextNode struct {
-	Text string
-}
-
-func (TextNode) Element() {}
-
-func el(name string, attrs Attrs, children Elements) TagElement {
-	return TagElement{name, attrs, children}
-}
-
-// todo: dynamicelement constructor
-
 func text(text string) Element {
 	return TextNode{text}
 }
@@ -65,52 +37,20 @@ func (cn *CustomNotifier) Notify() {
 func (cn *CustomNotifier) AddDependent(Notifiable)  {}
 func (cn *CustomNotifier) AddDependency(Notifiable) {}
 
-func renderTagElement(te TagElement) js.Value {
-	doc := js.Global().Get("document")
-	el := doc.Call("createElement", te.Name)
-	for k, v := range te.Attrs {
-		el.Set(k, v)
-	}
-	for _, child := range te.Children {
-		el.Call("appendChild", renderElement(child))
-	}
-	return el
-}
-
-func renderTextNode(tn TextNode) js.Value {
-	doc := js.Global().Get("document")
-	return doc.Call("createTextNode", tn.Text)
-}
-
-func renderTagElementComputed(cte *Computed[TagElement]) js.Value {
-	node := renderTagElement(cte.compute(nilNotifier))
-	node.Call("setAttribute", "data-dynamic-id", cte.ID)
-
-	doc := js.Global().Get("document")
-	// if an element with the same ID already exists, replace it
-	if existing := doc.Call("querySelector", "[data-dynamic-id='"+cte.ID+"']"); existing.Truthy() {
-		existing.Call("replaceWith", node)
-	}
-
-	return node
-}
-
 func renderElement(se Element) js.Value {
 	switch v := se.(type) {
-	case TagElement:
-		return renderTagElement(v)
-	case TextNode:
-		return renderTextNode(v)
+	case TagElement, TextNode:
+		return v.Render()
 	case *ComputedElement:
 		notify := &CustomNotifier{}
 		notify.notifyFunc = func() {
 			println("Notifying dependents of computed element with ID:", v.ID)
-			renderTagElementComputed(&v.Computed)
+			v.Render()
 		}
 
 		v.AddDependent(notify)
 
-		return renderTagElementComputed(&v.Computed)
+		return v.Render()
 	}
 
 	panic("unknown element type")
@@ -165,17 +105,3 @@ func (d *Deps) Dependents() map[Notifiable]struct{} {
 type Notifier func(Notifiable)
 
 func nilNotifier(Notifiable) {}
-
-type ComputedElement struct {
-	Computed[TagElement]
-}
-
-func NewComputedElement(compute Compute[TagElement]) *ComputedElement {
-	c := NewComputed(compute)
-
-	return &ComputedElement{
-		Computed: *c,
-	}
-}
-
-func (ComputedElement) Element() {}
