@@ -47,7 +47,7 @@ func main() {
 
 				fmt.Println("nquadruple:", nquadruple, "calling Invoke with ThingFunc")
 
-				res, err := InvokeFetch(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple})
+				res, err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple})
 				if err != nil {
 					panic(err)
 				}
@@ -55,10 +55,12 @@ func main() {
 				fmt.Println("Request finished")
 				fmt.Println("Received response from server:", res)
 
+				nquadruple = res.B
+
 				return e("p").
 					Attr("style", "color: white").
 					Children(
-						text("Updated from the server that's " + strconv.Itoa(res.B) + " times."),
+						text("Updated from the server that's " + strconv.Itoa(nquadruple) + " times."),
 					)
 			}),
 

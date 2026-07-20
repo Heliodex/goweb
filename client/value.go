@@ -32,6 +32,6 @@ func (v *Value[T]) Set(newValue T) {
 	fmt.Println("Value set called, notifying dependents")
 	for dep := range v.dependents {
 		fmt.Println("notifying", dep)
-		dep.Notify()
+		 go dep.Notify()
 	}
 }

@@ -42,7 +42,7 @@ func (c *Computed[T]) Use(n Notifier) T {
 func (c *Computed[T]) Notify() {
 	fmt.Println("Computed Notify called, notifying dependents")
 	for dep := range c.dependents {
-		dep.Notify()
+		go dep.Notify()
 	}
 }
 
