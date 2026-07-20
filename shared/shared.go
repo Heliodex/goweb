@@ -4,7 +4,7 @@ type Data interface {
 	Validate() error
 }
 
-type RemoteFunc[ReqType Data, ResType Data] struct {
+type RemoteFunc[ReqType, ResType Data] struct {
 	Name     string
 	Callback func(ReqType) ResType
 }

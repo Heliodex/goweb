@@ -3,21 +3,13 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/Heliodex/goweb/shared"
 )
 
 func main() {
-	println("Hello from the client!")
-
-	res, err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: 42})
-	if err != nil {
-		panic(err)
-	}
-
-	println("Response from server:", res.A, res.B)
-
 	num := NewValue(0)
 	double := NewComputed(func(n Notifier) int {
 		return num.Use(n) * 2
@@ -47,6 +39,31 @@ func main() {
 					Attr("style", "color: white").
 					Children(
 						text("Quadruple that equals " + strconv.Itoa(quadruple.Use(n)) + " times."),
+					)
+			}),
+
+			NewComputedElement(func(n Notifier) TagElement {
+				nquadruple := quadruple.Use(n)
+
+				fmt.Println("nquadruple:", nquadruple, "calling Invoke with ThingFunc")
+
+				responseChan := make(chan shared.Thing, 1)
+				if err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple}, func(res shared.Thing) {
+					fmt.Println("sending response...")
+					responseChan <- res
+					fmt.Println("sent!")
+				}); err != nil {
+					panic(err)
+				}
+
+				fmt.Println("Request finished")
+				res := <-responseChan
+				fmt.Println("Received response from server:", res)
+
+				return e("p").
+					Attr("style", "color: white").
+					Children(
+						text("Updated from the server that's " + strconv.Itoa(res.B) + " times."),
 					)
 			}),
 

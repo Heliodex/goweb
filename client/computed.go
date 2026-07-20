@@ -4,7 +4,7 @@ package main
 
 import "fmt"
 
-type Compute[T any] func(Notifier) T
+type Compute[T any] func(n Notifier) T
 
 type Computed[T any] struct {
 	ID string
