@@ -15,6 +15,7 @@ type Elements []Element
 type TagElement struct {
 	name     string
 	attrs    Attrs
+	events   map[string]func()
 	children Elements
 }
 
@@ -31,12 +32,25 @@ func (te TagElement) Attr(key string, value any) TagElement {
 	return te
 }
 
+func (te TagElement) On(event string, handler func()) TagElement {
+	if te.events == nil {
+		te.events = make(map[string]func(), 1)
+	}
+	te.events[event] = handler
+	return te
+}
+
 func (te TagElement) Render() js.Value {
 	doc := js.Global().Get("document")
 	el := doc.Call("createElement", te.name)
 	for k, v := range te.attrs {
 		el.Set(k, v)
 	}
+
+	for event, handler := range te.events {
+		el.Call("addEventListener", event, MakeFunc(handler))
+	}
+
 	for _, child := range te.children {
 		el.Call("appendChild", renderElement(child))
 	}

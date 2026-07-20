@@ -80,10 +80,14 @@ func main() {
 			// 	text("Click me"),
 			// }),
 			e("button").
-				Attr("onclick", MakeFunc(func() {
+				// Attr("onclick", MakeFunc(func() {
+				// 	num.Set(num.Peek() + 1)
+				// 	println("Button clicked, num is now", num.Peek())
+				// })).
+				On("click", func() {
 					num.Set(num.Peek() + 1)
 					println("Button clicked, num is now", num.Peek())
-				})).
+				}).
 				Children(
 					text("Click me"),
 				),
