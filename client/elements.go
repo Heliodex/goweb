@@ -13,18 +13,31 @@ type Element interface {
 type Elements []Element
 
 type TagElement struct {
-	Name     string
-	Attrs    Attrs
-	Children Elements
+	name     string
+	attrs    Attrs
+	children Elements
+}
+
+func (te TagElement) Children(children ...Element) TagElement {
+	te.children = children
+	return te
+}
+
+func (te TagElement) Attr(key string, value any) TagElement {
+	if te.attrs == nil {
+		te.attrs = make(Attrs, 1)
+	}
+	te.attrs[key] = value
+	return te
 }
 
 func (te TagElement) Render() js.Value {
 	doc := js.Global().Get("document")
-	el := doc.Call("createElement", te.Name)
-	for k, v := range te.Attrs {
+	el := doc.Call("createElement", te.name)
+	for k, v := range te.attrs {
 		el.Set(k, v)
 	}
-	for _, child := range te.Children {
+	for _, child := range te.children {
 		el.Call("appendChild", renderElement(child))
 	}
 	return el
@@ -39,8 +52,8 @@ func (tn TextNode) Render() js.Value {
 	return doc.Call("createTextNode", tn.Text)
 }
 
-func el(name string, attrs Attrs, children Elements) TagElement {
-	return TagElement{name, attrs, children}
+func e(name string) TagElement {
+	return TagElement{name: name}
 }
 
 type ComputedElement struct {
