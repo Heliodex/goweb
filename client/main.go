@@ -47,17 +47,12 @@ func main() {
 
 				fmt.Println("nquadruple:", nquadruple, "calling Invoke with ThingFunc")
 
-				responseChan := make(chan shared.Thing, 1)
-				if err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple}, func(res shared.Thing) {
-					fmt.Println("sending response...")
-					responseChan <- res
-					fmt.Println("sent!")
-				}); err != nil {
+				res, err := InvokeFetch(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple})
+				if err != nil {
 					panic(err)
 				}
 
 				fmt.Println("Request finished")
-				res := <-responseChan
 				fmt.Println("Received response from server:", res)
 
 				return e("p").
