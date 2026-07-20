@@ -28,11 +28,6 @@ func main() {
 
 	dom := Dom{
 		Body: Elements{
-			// el("h1", Attrs{
-			// 	"style": "color: white",
-			// }, Elements{
-			// 	text("Hello from Go WASM!"),
-			// }),
 			e("h1").
 				Attr("style", "color: white").
 				Children(
@@ -40,53 +35,24 @@ func main() {
 				),
 
 			NewComputedElement(func(n Notifier) TagElement {
-				println("Dynamic function called! num is", num.Peek())
-				unum := num.Use(n)
-
-				// return el("p", Attrs{
-				// 	"style": "color: white",
-				// }, Elements{
-				// 	text("You have clicked the button " + strconv.Itoa(unum) + " times."),
-				// })
 				return e("p").
 					Attr("style", "color: white").
 					Children(
-						text("You have clicked the button " + strconv.Itoa(unum) + " times."),
+						text("You have clicked the button " + strconv.Itoa(num.Use(n)) + " times."),
 					)
 			}),
 
 			NewComputedElement(func(n Notifier) TagElement {
-				println("Dynamic function called! num is", num.Peek())
-				uquadruple := quadruple.Use(n)
-
-				// return el("p", Attrs{
-				// 	"style": "color: white",
-				// }, Elements{
-				// 	text("Quadruple that equals " + strconv.Itoa(uquadruple) + " times."),
-				// })
 				return e("p").
 					Attr("style", "color: white").
 					Children(
-						text("Quadruple that equals " + strconv.Itoa(uquadruple) + " times."),
+						text("Quadruple that equals " + strconv.Itoa(quadruple.Use(n)) + " times."),
 					)
 			}),
 
-			// el("button", Attrs{
-			// 	"onclick": MakeFunc(func() {
-			// 		num.Set(num.Peek() + 1)
-			// 		println("Button clicked, num is now", num.Peek())
-			// 	}),
-			// }, Elements{
-			// 	text("Click me"),
-			// }),
 			e("button").
-				// Attr("onclick", MakeFunc(func() {
-				// 	num.Set(num.Peek() + 1)
-				// 	println("Button clicked, num is now", num.Peek())
-				// })).
 				On("click", func() {
 					num.Set(num.Peek() + 1)
-					println("Button clicked, num is now", num.Peek())
 				}).
 				Children(
 					text("Click me"),
