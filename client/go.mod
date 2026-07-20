@@ -1,6 +1,6 @@
 module github.com/Heliodex/goweb/client
 
-go 1.26.4
+go 1.27rc2
 
 require github.com/Heliodex/goweb/shared v0.0.0-00010101000000-000000000000
 
