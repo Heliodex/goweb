@@ -6,12 +6,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/Heliodex/goweb/shared"
 )
 
 func init() {
 	shared.ThingFunc.Callback = func(t shared.Thing) shared.Thing {
+		fmt.Println("sending...")
+		time.Sleep(500 * time.Millisecond) // Simulate processing time
+		fmt.Println("sent")
+
 		return shared.Thing{
 			A: t.A + " processed",
 			B: t.B + 1,
