@@ -5,6 +5,6 @@ type Data interface {
 }
 
 type RemoteFunc[ReqType, ResType Data] struct {
-	Name     string
+	Name string
 	Callback func(ReqType) ResType
 }

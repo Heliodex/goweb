@@ -16,8 +16,8 @@ func NewComputed[T any](compute Compute[T]) *Computed[T] {
 	deps := MakeDeps()
 
 	c := &Computed[T]{
-		ID:      randomStringID(),
-		Deps:    deps,
+		ID: randomStringID(),
+		Deps: deps,
 		compute: compute,
 	}
 

@@ -13,7 +13,7 @@ func NewValue[T any](initial T) *Value[T] {
 	v := &Value[T]{}
 
 	v.Computed = Computed[T]{
-		ID:   randomStringID(),
+		ID: randomStringID(),
 		Deps: MakeDeps(),
 		compute: func(n Notifier) T {
 			n(v)
@@ -32,6 +32,6 @@ func (v *Value[T]) Set(newValue T) {
 	fmt.Println("Value set called, notifying dependents")
 	for dep := range v.dependents {
 		fmt.Println("notifying", dep)
-		 go dep.Notify()
+		go dep.Notify()
 	}
 }

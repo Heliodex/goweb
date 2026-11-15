@@ -13,9 +13,9 @@ type Element interface {
 type Elements []Element
 
 type TagElement struct {
-	name     string
-	attrs    Attrs
-	events   map[string]func()
+	name string
+	attrs Attrs
+	events map[string]func()
 	children Elements
 }
 

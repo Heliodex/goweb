@@ -34,7 +34,7 @@ func (cn *CustomNotifier) Notify() {
 	cn.notifyFunc()
 }
 
-func (cn *CustomNotifier) AddDependent(Notifiable)  {}
+func (cn *CustomNotifier) AddDependent(Notifiable) {}
 func (cn *CustomNotifier) AddDependency(Notifiable) {}
 
 func renderElement(se Element) js.Value {
@@ -90,7 +90,7 @@ type Deps struct {
 func MakeDeps() Deps {
 	return Deps{
 		dependencies: make(map[Notifiable]struct{}),
-		dependents:   make(map[Notifiable]struct{}),
+		dependents: make(map[Notifiable]struct{}),
 	}
 }
 
