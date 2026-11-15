@@ -16,7 +16,6 @@ func main() {
 			w.Write([]byte("Internal Server Error"))
 			return
 		}
-
 		w.Header().Set("Content-Type", "text/html")
 		w.Write(file)
 	})
@@ -29,11 +28,9 @@ func main() {
 			w.Write([]byte("Internal Server Error"))
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/wasm")
 		w.Write(file)
 	})
-
 	http.HandleFunc("/wasm_exec.js", func(w http.ResponseWriter, r *http.Request) {
 		file, err := os.ReadFile("../client/wasm_exec.js")
 		if err != nil {
@@ -41,13 +38,10 @@ func main() {
 			w.Write([]byte("Internal Server Error"))
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Write(file)
 	})
-
 	HandleRemoteFunc(shared.ThingFunc)
-
 	fmt.Println("Server is running on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

@@ -17,60 +17,37 @@ func main() {
 	quadruple := NewComputed(func(n Notifier) int {
 		return double.Use(n) * 2
 	})
-
 	dom := Dom{
 		Body: Elements{
-			e("h1").
-				Attr("style", "color: white").
-				Children(
-					text("Hello from Go WASM!"),
-				),
-
+			e("h1").Attr("style", "color: white").Children(text("Hello from Go WASM!")),
 			NewComputedElement(func(n Notifier) TagElement {
-				return e("p").
-					Attr("style", "color: white").
-					Children(
-						text("You have clicked the button " + strconv.Itoa(num.Use(n)) + " times."),
-					)
+				return e("p").Attr("style", "color: white").Children(text("You have clicked the button " + strconv.Itoa(num.Use(n)) + " times."))
 			}),
-
 			NewComputedElement(func(n Notifier) TagElement {
-				return e("p").
-					Attr("style", "color: white").
-					Children(
-						text("Quadruple that equals " + strconv.Itoa(quadruple.Use(n)) + " times."),
-					)
+				return e("p").Attr("style", "color: white").Children(text("Quadruple that equals " + strconv.Itoa(quadruple.Use(n)) + " times."))
 			}),
-
 			NewComputedElement(func(n Notifier) TagElement {
 				nquadruple := quadruple.Use(n)
 
 				fmt.Println("nquadruple:", nquadruple, "calling Invoke with ThingFunc")
 
-				res, err := Invoke(shared.ThingFunc, shared.Thing{A: "Hello", B: nquadruple})
+				res, err := Invoke(shared.ThingFunc, shared.Thing{
+					A: "Hello",
+					B: nquadruple,
+				})
 				if err != nil {
 					panic(err)
 				}
-
 				fmt.Println("Request finished")
 				fmt.Println("Received response from server:", res)
 
 				nquadruple = res.B
 
-				return e("p").
-					Attr("style", "color: white").
-					Children(
-						text("Updated from the server that's " + strconv.Itoa(nquadruple) + " times."),
-					)
+				return e("p").Attr("style", "color: white").Children(text("Updated from the server that's " + strconv.Itoa(nquadruple) + " times."))
 			}),
-
-			e("button").
-				On("click", func() {
-					num.Set(num.Peek() + 1)
-				}).
-				Children(
-					text("Click me"),
-				),
+			e("button").On("click", func() {
+				num.Set(num.Peek() + 1)
+			}).Children(text("Click me")),
 		},
 	}
 

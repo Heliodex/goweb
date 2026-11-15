@@ -19,6 +19,7 @@ func Invoke[ReqType, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType],
 	}
 
 	var w bytes.Buffer
+
 	if err = gob.NewEncoder(&w).Encode(arg); err != nil {
 		return res, fmt.Errorf("failed to encode request: %w", err)
 	}
@@ -27,6 +28,7 @@ func Invoke[ReqType, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType],
 	if err != nil {
 		return res, fmt.Errorf("failed to send request: %w", err)
 	}
+
 	defer hres.Body.Close()
 
 	if hres.StatusCode != http.StatusOK {
@@ -34,6 +36,7 @@ func Invoke[ReqType, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType],
 	}
 
 	var r bytes.Buffer
+
 	if _, err = r.ReadFrom(hres.Body); err != nil {
 		return res, fmt.Errorf("failed to read response body: %w", err)
 	}

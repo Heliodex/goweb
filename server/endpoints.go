@@ -16,7 +16,6 @@ func init() {
 		fmt.Println("sending...")
 		time.Sleep(500 * time.Millisecond) // Simulate processing time
 		fmt.Println("sent")
-
 		return shared.Thing{
 			A: t.A + " processed",
 			B: t.B + 1,
@@ -24,7 +23,7 @@ func init() {
 	}
 }
 
-func HandleRemoteFunc[ReqType shared.Data, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType]) {
+func HandleRemoteFunc[ReqType, ResType shared.Data](f shared.RemoteFunc[ReqType, ResType]) {
 	http.HandleFunc("POST /api/"+f.Name, func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -39,14 +38,11 @@ func HandleRemoteFunc[ReqType shared.Data, ResType shared.Data](f shared.RemoteF
 		}
 
 		out := f.Callback(in)
-
 		if gob.NewEncoder(w).Encode(out) != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/octet-stream")
 	})
-
 	fmt.Println("Registered remote function:", f.Name)
 }

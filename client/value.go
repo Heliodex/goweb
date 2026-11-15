@@ -11,7 +11,6 @@ type Value[T any] struct {
 
 func NewValue[T any](initial T) *Value[T] {
 	v := &Value[T]{}
-
 	v.Computed = Computed[T]{
 		ID: randomStringID(),
 		Deps: MakeDeps(),
@@ -32,6 +31,7 @@ func (v *Value[T]) Set(newValue T) {
 	fmt.Println("Value set called, notifying dependents")
 	for dep := range v.dependents {
 		fmt.Println("notifying", dep)
+
 		go dep.Notify()
 	}
 }
